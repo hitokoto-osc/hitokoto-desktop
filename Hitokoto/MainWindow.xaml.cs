@@ -36,7 +36,7 @@ namespace Hitokoto
         {
             InitializeComponent();
             ShowDesktop.AddHook(this);
-
+            
             Task TaskReflushHitokoto = Task.Factory.StartNew(() =>
             {
                 ReflushHitokoto();
@@ -111,6 +111,15 @@ namespace Hitokoto
                 textBlockSentence.Text = "加载失败,请重试~";
                 labelFrom.Content = "加载失败";
             }
+        }
+
+        private void MainForm_Loaded(object sender, RoutedEventArgs e)
+        {
+            /*设置窗口为ToolWindow 用于隐藏ALT+TAB内显示*/
+            WindowInteropHelper wndHelper = new WindowInteropHelper(this);
+            int exStyle = (int)SetWindowStyle.GetWindowLong(wndHelper.Handle, (int)SetWindowStyle.GetWindowLongFields.GWL_EXSTYLE);
+            exStyle |= (int)SetWindowStyle.ExtendedWindowStyles.WS_EX_TOOLWINDOW;
+            SetWindowStyle.SetWindowLong(wndHelper.Handle, (int)SetWindowStyle.GetWindowLongFields.GWL_EXSTYLE, (IntPtr)exStyle);
         }
     }
 }
