@@ -3,16 +3,47 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:Hitokoto"
         mc:Ignorable="d"
         WindowStyle="None"
         AllowsTransparency="True"
-        Title="MainWindow" Height="121.583" Width="546.554" WindowStartupLocation="CenterScreen" ShowInTaskbar="False" MouseLeftButtonDown="MainForm_MouseLeftButtonDown" StateChanged="MainForm_StateChanged" Activated="MainForm_Activated" MouseRightButtonDown="MainForm_MouseRightButtonDown" Loaded="MainForm_Loaded">
+        Title="MainWindow" Height="121.583" Width="546.554" 
+        WindowStartupLocation="CenterScreen" 
+        ShowInTaskbar="False" 
+        MouseLeftButtonDown="MainForm_MouseLeftButtonDown" 
+        Activated="MainForm_Activated" 
+        MouseRightButtonDown="MainForm_MouseRightButtonDown" 
+        Loaded="MainForm_Loaded"
+        >
+
     <Window.Background>
         <SolidColorBrush Color="White" Opacity="0"/>
     </Window.Background>
     <Grid x:Name="gridBackground" Width="{Binding Width}" Height="70">
-        <Border CornerRadius="0" Margin="10" BorderThickness="0,0,0,2" BorderBrush="White" Opacity="0.8">
+        <!-- 托盘图标 -->
+        <tb:TaskbarIcon
+                x:Name="MyNotifyIcon" 
+                IconSource="/Icons/hitokoto.ico" 
+                ToolTipText="Hitokoto" >
+            <!-- 托盘图标菜单 -->
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <TextBlock Text="Hitokoto - 菜单" />
+                    <Separator />
+                    <MenuItem x:Name="MenuItemSetting" 
+                              Header="设置" Click="MenuItemSetting_Click">
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem x:Name="MenuItemExit"
+                              Header="退出" 
+                              Click="MenuItemExit_Click">
+                    </MenuItem>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
+            <Border CornerRadius="0" Margin="10" BorderThickness="0,0,0,2" BorderBrush="White" Opacity="0.8">
             <Border.Effect>
                 <DropShadowEffect ShadowDepth="0" Color="#FF414141" BlurRadius="8"/>
             </Border.Effect>

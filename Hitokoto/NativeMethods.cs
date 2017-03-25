@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 
 namespace Hitokoto
 {
@@ -26,6 +27,11 @@ namespace Hitokoto
     {
         private const uint WINEVENT_OUTOFCONTEXT = 0u;
         private const uint EVENT_SYSTEM_FOREGROUND = 3u;
+        public const uint SWP_NOSIZE = 0x0001;
+        public const uint SWP_NOMOVE = 0x0002;
+        public const uint SWP_NOACTIVATE = 0x0010;
+        public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        public static readonly IntPtr HWND_TOP = new IntPtr(0);
 
         private const string WORKERW = "WorkerW";
         private const string PROGMAN = "Progman";
@@ -38,7 +44,14 @@ namespace Hitokoto
             }
 
             IsHooked = true;
-
+            /**
+             * 已知BUG：
+             * Win10下使用一次徽标键+D不会触发EVENT_SYSTEM_FOREGROUND事件
+             * 需要使用2次后会一同触发2次EVENT_SYSTEM_FOREGROUND事件
+             * 其他系统下正常
+             * 相关：0x22窗体缩小事件
+             *       0x23窗体还原事件
+             */
             _delegate = new WinEventDelegate(WinEventHook);
             _hookIntPtr = NativeMethods.SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _delegate, 0, 0, WINEVENT_OUTOFCONTEXT);
             _window = window;
