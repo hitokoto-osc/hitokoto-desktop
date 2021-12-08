@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -12,7 +14,7 @@ namespace Hitokoto
 {
     class HttpWebResponseUtility
     {
-        private static readonly string DefaultUserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
+        private static readonly string DefaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4750.0 Safari/537.36";
         /// <summary>  
         /// 创建GET方式的HTTP请求  
         /// </summary>  
@@ -22,34 +24,29 @@ namespace Hitokoto
         /// <param name="referer">请求来源Referer，可以为空</param>  
         /// <param name="cookies">随同HTTP请求发送的Cookie信息，如果不需要身份验证可以为空</param>  
         /// <returns></returns>  
-        public static HttpWebResponse CreateGetHttpResponse(string url, int? timeout, string userAgent, string referer, CookieCollection cookies)
+        public static HttpResponseMessage CreateGetHttpResponse(string url, int? timeout, string userAgent, string referer, CookieCollection cookies)
         {
-            if (string.IsNullOrEmpty(url))
-            {
-                throw new ArgumentNullException("url");
-            }
-            HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-            request.Method = "GET";
-            request.UserAgent = DefaultUserAgent;
+            if (string.IsNullOrEmpty(url)) throw new ArgumentNullException(nameof(url));
+
+            CookieContainer cookiesContainer = new();
+            HttpClientHandler handler = new () { CookieContainer = cookiesContainer };
+            HttpClient client = new (handler);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            client.Timeout = TimeSpan.FromSeconds(10);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+
             if (!string.IsNullOrEmpty(userAgent))
             {
-                request.UserAgent = userAgent;
+                requestMessage.Headers.UserAgent.Clear();
+                requestMessage.Headers.UserAgent.ParseAdd(userAgent);
             }
-            if (referer != null)
-            {
-                request.Referer = referer;
-            }
-            if (timeout.HasValue)
-            {
-                request.Timeout = timeout.Value;
-            }
-            if (cookies != null)
-            {
-                request.CookieContainer = new CookieContainer();
-                request.CookieContainer.Add(cookies);
-            }
-            return request.GetResponse() as HttpWebResponse;
+            if (!string.IsNullOrEmpty(referer)) { requestMessage.Headers.Referrer = new Uri(referer); }
+            if (timeout.HasValue) { client.Timeout = TimeSpan.FromMilliseconds(timeout.Value); }
+            if (cookies != null) { cookiesContainer.Add(cookies); }
+           
+            return client.Send(requestMessage);
         }
+
         /// <summary>  
         /// 创建POST方式的HTTP请求  
         /// </summary>  
@@ -60,88 +57,37 @@ namespace Hitokoto
         /// <param name="requestEncoding">发送HTTP请求时所用的编码</param>  
         /// <param name="cookies">随同HTTP请求发送的Cookie信息，如果不需要身份验证可以为空</param>  
         /// <returns></returns>  
-        public static HttpWebResponse CreatePostHttpResponse(string url, IDictionary<string, string> parameters, int? timeout, string userAgent, Encoding requestEncoding, CookieCollection cookies)
+        public static HttpResponseMessage CreatePostHttpResponse(string url, IDictionary<string, string> parameters, int? timeout, string userAgent, Encoding requestEncoding, CookieCollection cookies)
         {
             return CreatePostHttpResponse(url,parameters,timeout,userAgent,null,requestEncoding,cookies);
         }
-        public static HttpWebResponse CreatePostHttpResponse(string url, IDictionary<string, string> parameters, int? timeout, string userAgent, string referer, Encoding requestEncoding, CookieCollection cookies)
+        public static HttpResponseMessage CreatePostHttpResponse(string url, IDictionary<string, string> parameters, int? timeout, string userAgent, string referer, Encoding requestEncoding, CookieCollection cookies)
         {
             if (string.IsNullOrEmpty(url))
             {
-                throw new ArgumentNullException("url");
+                throw new ArgumentNullException(nameof(url));
             }
             if (requestEncoding == null)
             {
-                throw new ArgumentNullException("requestEncoding");
+                throw new ArgumentNullException(nameof(requestEncoding));
             }
-            HttpWebRequest request = null;
-            //如果是发送HTTPS请求  
-            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            {
-                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(CheckValidationResult);
-                request = WebRequest.Create(url) as HttpWebRequest;
-                request.ProtocolVersion = HttpVersion.Version10;
-            }
-            else
-            {
-                request = WebRequest.Create(url) as HttpWebRequest;
-            }
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            //request.ContentType = "application/json;charset=UTF-8";
+            CookieContainer cookiesContainer = new();
+            HttpClientHandler handler = new () { CookieContainer = cookiesContainer };
+            HttpClient client = new (handler);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            client.Timeout = TimeSpan.FromSeconds(10);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters)};
 
             if (!string.IsNullOrEmpty(userAgent))
             {
-                request.UserAgent = userAgent;
+                requestMessage.Headers.UserAgent.Clear();
+                requestMessage.Headers.UserAgent.ParseAdd(userAgent);
             }
-            else
-            {
-                request.UserAgent = DefaultUserAgent;
-            }
+            if (!string.IsNullOrEmpty(referer)) { requestMessage.Headers.Referrer = new Uri(referer); }
+            if (timeout.HasValue) { client.Timeout = TimeSpan.FromMilliseconds(timeout.Value); }
+            if (cookies != null) { cookiesContainer.Add(cookies); }
 
-            if (timeout.HasValue)
-            {
-                request.Timeout = timeout.Value;
-            }
-            if (referer != null)
-            {
-                request.Referer = referer;
-            }
-            if (cookies != null)
-            {
-                request.CookieContainer = new CookieContainer();
-                request.CookieContainer.Add(cookies);
-            }
-            //如果需要POST数据  
-            if (!(parameters == null || parameters.Count == 0))
-            {
-                StringBuilder buffer = new StringBuilder();
-                int i = 0;
-                foreach (string key in parameters.Keys)
-                {
-                    if (i > 0)
-                    {
-                        buffer.AppendFormat("&{0}={1}", key, parameters[key]);
-                    }
-                    else
-                    {
-                        buffer.AppendFormat("{0}={1}", key, parameters[key]);
-                    }
-                    i++;
-                }
-                byte[] data = requestEncoding.GetBytes(buffer.ToString());
-                using (Stream stream = request.GetRequestStream())
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-            }
-            return request.GetResponse() as HttpWebResponse;
-
-        }
-
-        private static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
-        {
-            return true; //总是接受  
+            return client.Send(requestMessage);
         }
     }
 }

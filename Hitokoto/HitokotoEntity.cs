@@ -10,30 +10,18 @@ namespace Hitokoto
     {
         public class Sentence
         {
-            /// <summary>
-            /// 
-            /// </summary>
-            public string id { get; set; }
-            /// <summary>
-            /// 一言内容
-            /// </summary>
+            public int id { get; set; }
+            public string uuid { get; set; }
             public string hitokoto { get; set; }
-            /// <summary>
-            /// 类型
-            /// </summary>
             public string type { get; set; }
-            /// <summary>
-            /// 来自
-            /// </summary>
             public string from { get; set; }
-            /// <summary>
-            /// 创建者
-            /// </summary>
+            public string from_who { get; set; }
             public string creator { get; set; }
-            /// <summary>
-            /// 创建时间
-            /// </summary>
-            public string cearted_at { get; set; }
+            public int creator_uid { get; set; }
+            public int reviewer { get; set; }
+            public string commit_from { get; set; }
+            public string created_at { get; set; }
+            public int length { get; set; }
         }
     }
 }

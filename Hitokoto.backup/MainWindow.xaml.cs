@@ -2,10 +2,13 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
+using System.Web.Script.Serialization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Forms;
+using System.Drawing;
 
 namespace Hitokoto
 {
@@ -19,10 +22,10 @@ namespace Hitokoto
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOMOVE = 0x0002;
         public const uint SWP_NOACTIVATE = 0x0010;
-        public static readonly IntPtr HWND_BOTTOM = new (1);
+        public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
         [DllImport("user32.dll")]
         internal static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpWindowClass, string lpWindowName);
         public MainWindow()
         {
@@ -38,7 +41,7 @@ namespace Hitokoto
             //label1.Content = "test";
         }
 
-        private static void CreateNotifyIcon()
+        private void CreateNotifyIcon()
         {
             //NotifyIcon nIcon = new NotifyIcon();
             //nIcon.Icon = new Icon(@"hitokoto.ico");
@@ -71,7 +74,8 @@ namespace Hitokoto
                 string hitokoto = HitokotoMethods.Get();
                 try
                 {
-                    var json = JsonSerializer.Deserialize<HitokotoEntity.Sentence>(hitokoto);
+                    var jser = new JavaScriptSerializer();
+                    var json = jser.Deserialize<HitokotoEntity.Sentence>(hitokoto);
                     Dispatcher.BeginInvoke(new Action(delegate
                     {
                         textBlockSentence.Text = json.hitokoto;
@@ -100,7 +104,7 @@ namespace Hitokoto
             this.DragMove();
         }
 
-        private static void SetBottom(Window window)
+        private void SetBottom(Window window)
         {
             IntPtr hWnd = new WindowInteropHelper(window).Handle;
             NativeMethods.SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
@@ -116,7 +120,8 @@ namespace Hitokoto
             string hitokoto = HitokotoMethods.Get();
             try
             {
-                var json = JsonSerializer.Deserialize<HitokotoEntity.Sentence>(hitokoto);
+                var jser = new JavaScriptSerializer();
+                var json = jser.Deserialize<HitokotoEntity.Sentence>(hitokoto);
                 textBlockSentence.Text = json.hitokoto;
                 labelFrom.Content = "—— " + json.from;
             }
@@ -132,7 +137,7 @@ namespace Hitokoto
         private void MainForm_Loaded(object sender, RoutedEventArgs e)
         {
             /*设置窗口为ToolWindow 用于隐藏ALT+TAB内显示*/
-            WindowInteropHelper wndHelper = new (this);
+            WindowInteropHelper wndHelper = new WindowInteropHelper(this);
             int exStyle = (int)SetWindowStyle.GetWindowLong(wndHelper.Handle, (int)SetWindowStyle.GetWindowLongFields.GWL_EXSTYLE);
             exStyle |= (int)SetWindowStyle.ExtendedWindowStyles.WS_EX_TOOLWINDOW;
             SetWindowStyle.SetWindowLong(wndHelper.Handle, (int)SetWindowStyle.GetWindowLongFields.GWL_EXSTYLE, (IntPtr)exStyle);

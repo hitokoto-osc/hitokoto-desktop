@@ -17,7 +17,7 @@ namespace Hitokoto
         [DllImport("user32.dll")]
         internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        [DllImport("user32.dll")]
         internal static extern int GetClassName(IntPtr hwnd, StringBuilder name, int count);
 
         [DllImport("user32.dll")]
@@ -30,8 +30,8 @@ namespace Hitokoto
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOMOVE = 0x0002;
         public const uint SWP_NOACTIVATE = 0x0010;
-        public static readonly IntPtr HWND_BOTTOM = new (1);
-        public static readonly IntPtr HWND_TOP = new (0);
+        public static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        public static readonly IntPtr HWND_TOP = new IntPtr(0);
 
         private const string WORKERW = "WorkerW";
         private const string PROGMAN = "Progman";
@@ -75,7 +75,7 @@ namespace Hitokoto
 
         private static string GetWindowClass(IntPtr hwnd)
         {
-            StringBuilder _sb = new (32);
+            StringBuilder _sb = new StringBuilder(32);
             NativeMethods.GetClassName(hwnd, _sb, _sb.Capacity);
             return _sb.ToString();
         }

@@ -13,9 +13,9 @@ namespace Hitokoto
         public static string  Get()
         {
             string result = "";
-            var hitokotoResponse =  HttpWebResponseUtility.CreateGetHttpResponse("https://v1.hitokoto.cn/", 5000, "HitokotoDesktop/1.0", "", null);
-            Stream resStream = hitokotoResponse.Content.ReadAsStream();
-            using (StreamReader sr = new(resStream))
+            HttpWebResponse hitokotoResponse =  HttpWebResponseUtility.CreateGetHttpResponse("https://sslapi.hitokoto.cn/", 5000, "HitokotoDesktop/1.0", "", null);
+            Stream resStream = hitokotoResponse.GetResponseStream();
+            using (StreamReader sr = new StreamReader(resStream))
             {
                 result = sr.ReadToEnd();
             }
