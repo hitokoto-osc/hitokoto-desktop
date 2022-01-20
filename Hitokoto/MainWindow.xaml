@@ -25,7 +25,7 @@
         <tb:TaskbarIcon
                 x:Name="MyNotifyIcon" 
                 IconSource="/Icons/hitokoto.ico" 
-                ToolTipText="Hitokoto" >
+                ToolTipText="Hitokoto - 一言" >
             <!-- 托盘图标菜单 -->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
